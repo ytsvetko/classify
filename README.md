@@ -1,5 +1,7 @@
 **A wrapper to python scikit-learn classifiers**
-**(e.g., SVM, Logistic Regression, Random Forest, Gradient Boosted Regression Trees) **
+
+**(e.g., SVM, Logistic Regression, Random Forest, Gradient Boosted Regression Trees)**
+
 **that works with sparse input features in json format**
 
 Input files format:
