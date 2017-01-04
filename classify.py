@@ -102,7 +102,7 @@ class Classifier(object):
       predictions.append(prob_array.argmax())
     return predictions, posteriors
 
-  def LoadCregFeatFile(self, feat_filename, create_new_features=True):
+  def LoadJsonFeatFile(self, feat_filename, create_new_features=True):
     Xsparse = []
     instances = []
     for features_line in codecs.open(feat_filename, "r", "utf-8"):
@@ -115,7 +115,7 @@ class Classifier(object):
       Xsparse.append(feat_dict)
     return Xsparse, instances
 
-  def LoadCregLabelsFile(self, labels_filename):
+  def LoadJsonLabelsFile(self, labels_filename):
     y = []
     instances = []
     for labels_line in codecs.open(labels_filename, "r", "utf-8"):
@@ -124,7 +124,7 @@ class Classifier(object):
       y.append(self.labels_enum.StrToNum(label))
     return y, instances
 
-  def SaveCregFeat(self, instances, x_list, feat_filename):
+  def SaveJsonFeat(self, instances, x_list, feat_filename):
     feat_file = codecs.open(feat_filename, "w", "utf-8")
     for instance, x in izip_longest(instances, x_list):
       features = {}
@@ -133,7 +133,7 @@ class Classifier(object):
       features_str = json.dumps(features, sort_keys=True)
       feat_file.write(u"{}\t{}\n".format(instance, features_str))
 
-  def SaveCregLabels(self, instances, y_list, y_probabilities, write_class_confidence, labels_filename):
+  def SaveJsonLabels(self, instances, y_list, y_probabilities, write_class_confidence, labels_filename):
     labels_file = codecs.open(labels_filename, "w", "utf-8")
     y_prob_iter = [] if y_probabilities is None else y_probabilities
     for instance, y, y_prob in izip_longest(instances, y_list, y_prob_iter):
@@ -239,8 +239,8 @@ def main():
     classifier = Classifier()
 
     # Training
-    X, x_instances = classifier.LoadCregFeatFile(args.train_features)
-    y, y_instances = classifier.LoadCregLabelsFile(args.train_labels)
+    X, x_instances = classifier.LoadJsonFeatFile(args.train_features)
+    y, y_instances = classifier.LoadJsonLabelsFile(args.train_labels)
     if x_instances != y_instances:
       for i, (x, y) in enumerate(izip_longest(x_instances, y_instances)):
         assert (x==y), (i+1, x, y)
@@ -280,17 +280,17 @@ def main():
   for i in xrange(len(classifier.labels_enum)):
     label_weights.append(label_weights_sparse.get(classifier.labels_enum.NumToStr(i), 1.0))
   label_weights = np.array(label_weights)
-  X_test, test_instances = classifier.LoadCregFeatFile(args.test_features, create_new_features=False)
+  X_test, test_instances = classifier.LoadJsonFeatFile(args.test_features, create_new_features=False)
 
   test_predicted_labels, test_predicted_probabilities = classifier.Predict(X_test, label_weights)
   if args.test_predicted_labels_out:
     out_probabilities = test_predicted_probabilities
     if not args.write_posterior_probabilities:
       out_probabilities = None
-    classifier.SaveCregLabels(test_instances, test_predicted_labels,
+    classifier.SaveJsonLabels(test_instances, test_predicted_labels,
         out_probabilities, args.write_class_confidence, args.test_predicted_labels_out)
   if args.golden_labels:
-    golden_labels, golden_instances = classifier.LoadCregLabelsFile(args.golden_labels)
+    golden_labels, golden_instances = classifier.LoadJsonLabelsFile(args.golden_labels)
     assert (golden_instances == test_instances)
     classifier.WriteConfusionMatrix(test_predicted_labels, golden_labels, sys.stdout)
     accuracy = classifier.CalcAccuracy(test_predicted_labels, golden_labels)
